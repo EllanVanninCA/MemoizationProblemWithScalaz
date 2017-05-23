@@ -2,22 +2,25 @@ package ca.ellanVannin.memoizationProblem.actors
 
 import akka.actor.{Actor, ActorRef, Props}
 import akka.pattern.ask
-import ca.ellanVannin.memoizationProblem.BlogPostMainClass
+import akka.util.Timeout
 
 import scala.concurrent.Await
+import scala.concurrent.duration.FiniteDuration
 import scalaz.Memo
+import scala.concurrent.duration._
 
 /**
   * Created by Chris on 2017-05-21.
   */
 class MemoizationActorWithProperSingletonActor(memoActor: ActorRef) extends MemoizationActor {
-  override def useMemo(number: Int): String = {
-    implicit val TIMEOUT = BlogPostMainClass.TIMEOUT
+  implicit val TIMEOUT_DURATION: FiniteDuration = 1 minute
+  implicit val TIMEOUT: Timeout = Timeout(TIMEOUT_DURATION)
 
+  override def useMemo(number: Int): String = {
     val callMemo = memoActor ? number
 
     //I wouldn't use Await here in the real world but wanted to keep the same method signature as for previous examples.
-    Await.result(callMemo, BlogPostMainClass.TIMEOUT_DURATION).asInstanceOf[String]
+    Await.result(callMemo, TIMEOUT_DURATION).asInstanceOf[String]
   }
 }
 

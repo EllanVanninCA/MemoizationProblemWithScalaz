@@ -20,6 +20,7 @@ object BlogPostMainClass {
   val BAD = "BAD"
   val CONCURRENT_HASHMAP = "CONCURRENT_HASHMAP"
   val SINGLETON_ACTOR = "SINGLETON_ACTOR"
+  val WEAK_HASHMAP = "WEAK_HASHMAP"
 
   implicit val TIMEOUT_DURATION: FiniteDuration = 1 minute
   implicit val TIMEOUT: Timeout = Timeout(TIMEOUT_DURATION)
@@ -29,12 +30,13 @@ object BlogPostMainClass {
       val system = ActorSystem("MemoizationProblemWithScalaz")
 
       val actor: ActorRef = args(0) match {
-        case NO_MEMO => system.actorOf(NoMemoizationActor.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "NoMemoizationActor")
+        case NO_MEMO => system.actorOf(NoMemoizationActor.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "NoMemoActor")
         case BAD => system.actorOf(MemoizationActorGoneWrong.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "MemoizationActorWrong")
-        case CONCURRENT_HASHMAP => system.actorOf(MemoizationActorWithConcurrentHashMap.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "MemoizationActorBetter")
+        case CONCURRENT_HASHMAP => system.actorOf(MemoizationActorWithConcurrentHashMap.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "ConcurrentHashMapActor")
+        case WEAK_HASHMAP => system.actorOf(MemoizationActorWithConcurrentHashMap.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "WeakHashMapActor")
         case SINGLETON_ACTOR =>
           val memoActor = system.actorOf(MemoActor.PROPS, "MemoActor")
-          system.actorOf(MemoizationActorWithProperSingletonActor.PROPS(memoActor).withRouter(RoundRobinPool(NB_OF_ACTORS)), "MemoizationActorCorrect")
+          system.actorOf(MemoizationActorWithProperSingletonActor.PROPS(memoActor).withRouter(RoundRobinPool(NB_OF_ACTORS)), "SingletonMemoActor")
         case _ => system.actorOf(Props[DisplayHelpActor], "DisplayHelpActor")
       }
 
@@ -65,7 +67,7 @@ object BlogPostMainClass {
   }
 
   def displayHelp(): Unit = {
-    System.err.println(s"Please call the program with either '$NO_MEMO', '$BAD', '$CONCURRENT_HASHMAP' or '$SINGLETON_ACTOR'")
+    System.err.println(s"Please call the program with either '$NO_MEMO', '$BAD', '$CONCURRENT_HASHMAP', '$WEAK_HASHMAP' or '$SINGLETON_ACTOR'")
   }
 }
 
