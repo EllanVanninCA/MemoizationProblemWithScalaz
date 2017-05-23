@@ -2,7 +2,7 @@ package ca.ellanVannin.memoizationProblem.actors
 
 import akka.actor.Actor
 
-import scala.util.{Properties, Random}
+import scala.util.Properties
 
 /**
   * Created by Chris on 2017-05-21.
@@ -26,7 +26,7 @@ trait MemoizationActor extends Actor {
 }
 
 object MemoizationActor {
-  val ITERATIONS = 100
+  val ITERATIONS = 200
   val NB_OF_ACTORS = 50
 
   /**

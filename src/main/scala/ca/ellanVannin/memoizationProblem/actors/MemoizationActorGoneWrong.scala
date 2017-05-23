@@ -7,12 +7,12 @@ import scalaz.Memo
 /**
   * Created by Chris on 2017-05-20.
   */
-class MemoizationActorWrong extends MemoizationActor {
-  override def useMemo(number: Int): String = MemoizationActorWrong.memo(number)
+class MemoizationActorGoneWrong extends MemoizationActor {
+  override def useMemo(number: Int): String = MemoizationActorGoneWrong.memo(number)
 }
 
-object MemoizationActorWrong {
-  val PROPS = Props[MemoizationActorWrong]
+object MemoizationActorGoneWrong {
+  val PROPS: Props = Props[MemoizationActorGoneWrong]
 
   val memo: Int => String = Memo.mutableHashMapMemo(MemoizationActor.myLongRunningMethod)
 }

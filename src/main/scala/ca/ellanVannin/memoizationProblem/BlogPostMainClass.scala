@@ -18,10 +18,11 @@ import scala.util.Properties
 object BlogPostMainClass {
   val NO_MEMO = "NO_MEMO"
   val BAD = "BAD"
-  val BETTER = "BETTER"
+  val CONCURRENT_HASHMAP = "CONCURRENT_HASHMAP"
+  val SINGLETON_ACTOR = "SINGLETON_ACTOR"
 
-  implicit val TIMEOUT_DURATION = 1 minute
-  implicit val TIMEOUT = Timeout(TIMEOUT_DURATION)
+  implicit val TIMEOUT_DURATION: FiniteDuration = 1 minute
+  implicit val TIMEOUT: Timeout = Timeout(TIMEOUT_DURATION)
 
   def main(args: Array[String]): Unit = {
     if (args.length > 0) {
@@ -29,19 +30,20 @@ object BlogPostMainClass {
 
       val actor: ActorRef = args(0) match {
         case NO_MEMO => system.actorOf(NoMemoizationActor.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "NoMemoizationActor")
-        case BAD => system.actorOf(MemoizationActorWrong.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "MemoizationActorWrong")
-        case BETTER => system.actorOf(MemoizationActorBetter.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "MemoizationActorBetter")
+        case BAD => system.actorOf(MemoizationActorGoneWrong.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "MemoizationActorWrong")
+        case CONCURRENT_HASHMAP => system.actorOf(MemoizationActorWithConcurrentHashMap.PROPS.withRouter(RoundRobinPool(NB_OF_ACTORS)), "MemoizationActorBetter")
+        case SINGLETON_ACTOR =>
+          val memoActor = system.actorOf(MemoActor.PROPS, "MemoActor")
+          system.actorOf(MemoizationActorWithProperSingletonActor.PROPS(memoActor).withRouter(RoundRobinPool(NB_OF_ACTORS)), "MemoizationActorCorrect")
         case _ => system.actorOf(Props[DisplayHelpActor], "DisplayHelpActor")
       }
 
       val BEGIN = System.currentTimeMillis()
 
       val calculations = Future.sequence {
-        (0 until NB_OF_ACTORS).map {
+        (0 until 2 * NB_OF_ACTORS).map {
           i =>
-            (actor ? s"Message $i") match {
-              case x: Future[String] => x
-            }
+            (actor ? s"Message $i").asInstanceOf[Future[String]]
         }
       }
 
@@ -63,12 +65,12 @@ object BlogPostMainClass {
   }
 
   def displayHelp(): Unit = {
-    System.err.println(s"Please call the program with either '$NO_MEMO', '$BAD' or '$BETTER'")
+    System.err.println(s"Please call the program with either '$NO_MEMO', '$BAD', '$CONCURRENT_HASHMAP' or '$SINGLETON_ACTOR'")
   }
 }
 
 class DisplayHelpActor extends Actor {
-  override def receive = {
+  override def receive: Receive = {
     case _ => BlogPostMainClass.displayHelp()
   }
 }
